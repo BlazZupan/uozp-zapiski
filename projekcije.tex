@@ -20,7 +20,7 @@ Začnimo s primerom. Na sliki~\ref{f:torbice} so ženske torbice različnih proi
 
 \section{Metoda glavnih komponent}
 
-Prva, morda tudi najbolj znana metoda za zmanjšanje dimenzij in odkrivanje zanimivih projekcij podatkov je metoda glavnih komponent. Predpostavimo, da imamo dano matriko učnih primerov $X\in\mathbb{R}^{m\times n}$, kjer je $m$ število primerov in $n$ število atributov. Primer $x^{(i)}\in X$, torej $i$-ti primer v učni množici primerov, bo tako opisan z $n$ atributi $x\in\mathbb{R}^{n}$, za katere bomo tu privzeli, da so njihove vrednosti realna števila. V splošnem iščemo projekcije podatkov tako, da atributni zapis primerov z $n$ atributi nadomestimo z atributnim zapisom z $k$ novimi atributi tako, da je $k\ll n$ in da nam novi atributi povedo čim več o primerih iz učne množice.
+Prva, morda tudi najbolj znana metoda za zmanjšanje dimenzij in odkrivanje zanimivih projekcij podatkov je metoda glavnih komponent. Predpostavimo, da imamo dano matriko učnih primerov $X\in\mathbb{R}^{m\times n}$, kjer je $m$ število primerov in $n$ število atributov. Primer $x^{(i)}\in X$, torej $i$-ti primer v učni množici primerov, bo tako opisan z $n$ atributi $x\in\mathbb{R}^{n}$, za katere bomo tu privzeli, da so njihove vrednosti realna števila. V splošnem iščemo projekcije podatkov tako, da atributni zapis primerov z $n$ atributi nadomestimo z atributnim zapisom s $k$ novimi atributi tako, da je $k\ll n$ in da nam novi atributi povedo čim več o primerih iz učne množice.
 
 Pričnimo s $k=1$, torej s projekcijo v eno samo dimenzijo. Dogovorimo se, da bo naša projekcija linearna in da bomo vrednost novega atributa tvorili kot linearno kombinacijo originalnih atributov. Premico, na katero bomo projicirali podatke, označimo z enotskim vektorjem $u_1$, za katerega torej velja $u_1^\tr u_1=1$.
 
@@ -87,7 +87,7 @@ Tu je ${\rm S}$ matrika katere vrednosti poznamo, $u_1$ je vektor, ki ga iščem
 %
 Na levi je izraz za našo varianco $\Var(u_1^\intercal X^\tr)$, ki jo skušamo maksimizirati. Vemo, da mora biti $u_1$ lastni vektor kovariančne matrike. Skladno z zgornjo enačbo pa sedaj tudi vemo, da je to lastni vektor z najvišjo pripadajočo lastno vrednostjo.
 
-V smeri vektorja $u_1$ se lega naših primerov $X$ v $n$-dimenzionalnem prostoru torej najbolj spreminja, njihova varianca je v tej smeri največja. Z $u_1^\tr X^\tr$ dobimo pravokotno projekcijo vsakega od primerov na to os. S to projekcijo, oziroma legi v smeri $u_1$, smo pojasnili največjo varianco primerov. Kaj še ostane? Vse, kar je pravokotno na smer $u_1$. Največjo varianco na pravokotni hiperravnini pa je ravno v smeri drugega lastnega vektorja, saj je ta pravokoten na $u_1$, to je vektorja, ki ima drugo največjo lastno vrednost. Pojasnjen delež te variance je $\lambda_2$, skupaj pa s pravokotno projekcijo na prvi in drugi lastni vektor pojasnimo $\lambda_1+\lambda_2$ variance množice primerov.
+V smeri vektorja $u_1$ se lega naših primerov $X$ v $n$-dimenzionalnem prostoru torej najbolj spreminja, njihova varianca je v tej smeri največja. Z $u_1^\tr X^\tr$ dobimo pravokotno projekcijo vsakega od primerov na to os. S to projekcijo, oziroma legi v smeri $u_1$, smo pojasnili največjo varianco primerov. Kaj še ostane? Vse, kar je pravokotno na smer $u_1$. Največja varianca na pravokotni hiperravnini pa je ravno v smeri drugega lastnega vektorja, saj je ta pravokoten na $u_1$, to je vektor, ki ima drugo največjo lastno vrednost. Pojasnjen delež te variance je $\lambda_2$, skupaj s pravokotno projekcijo na prvi in drugi lastni vektor pa pojasnimo $\lambda_1+\lambda_2$ variance množice primerov.
 
 Lastni vektorji kovariančne matrike nam določajo nov koordinatni
 sistem, kjer so koordinate, po vrsti, tiste, po katerih se lege točk v
@@ -127,7 +127,7 @@ Za primer, ko nas zanima samo projekcija podatkov v ravnino lahko potenčno meto
 
 \section{Večrazredno lestvičenje}
 
-Pri zmanjšanju dimenzij nam je lahko cilj, da ohranimo razdalje med posameznimi primeri. Tu predpostavimo, da za vsak par primerov znamo med njimi oceniti razdaljo. Se pravi, če imamo primere predstavljene v atributnem zapisu, potem uporabimo recimo Evklidsko razdaljo ali pa kosinusno podobnost. Lepota tehnike, ki jo bomo predstavili v tem razdelku je, da nas ne zanima, kako je bila podobnost oziroma razdalja med primeri ocenjena. Lahko smo na vhodu na primer imeli tekstovne dokumente, za katere razdaljo recimo izračunamo s kakšno kompresijsko tehniko. Ali pa filme, za katere razdaljo izračunamo z ozirom na njihovo gledanost v spletni sposojevalnici. Ali pa čivke, ki jih primerjamo med sabo glede na to, kdo jih je všečkal.
+Pri zmanjšanju dimenzij nam je lahko cilj, da ohranimo razdalje med posameznimi primeri. Tu predpostavimo, da znamo med vsakim parom primerov oceniti razdaljo. Se pravi, če imamo primere predstavljene v atributnem zapisu, potem uporabimo recimo Evklidsko razdaljo ali pa kosinusno podobnost. Lepota tehnike, ki jo bomo predstavili v tem razdelku je, da nas ne zanima, kako je bila podobnost oziroma razdalja med primeri ocenjena. Lahko smo na vhodu na primer imeli tekstovne dokumente, za katere razdaljo recimo izračunamo s kakšno kompresijsko tehniko. Ali pa filme, za katere razdaljo izračunamo z ozirom na njihovo gledanost v spletni sposojevalnici. Ali pa čivke, ki jih primerjamo med sabo glede na to, kdo jih je všečkal.
 
 Naj bo razdalja med primeroma enaka $\delta_{ij}$. Sedaj te primere vložimo, recimo, v dvodimenzionalno projekcijo tako da vsakemu primeru $i$ pripišemo koordinati $\vect{\theta}^{(i)}=(\theta_1^{(i)},\theta_2^{(i)})$. Želeli bi, da se v njej razdalje ohranjajo, to je, da je projekcijska razdalja, ki naj bo $d_{ij}$, čimbolj podobna originalni razdalji med primeroma. Razdalja primerov v projekcijskem prostoru je:
 $$\delta_{ij}=\norm{{\vect{\theta}}^{(i)}-\vect{\theta}^{(j)}}$$
@@ -157,7 +157,7 @@ Algoritem večdimenzionalnega lestvičenja, ki deluje na ta način, se imenuje S
 
 Za izračun napetosti lahko namesto gornje, naivne formule uporabljamo tudi takšno, ki uteži prispevke parov (predpišemo lahko, za katere pare si še posebej želimo, da bi razdalja ustrezala pravi), poleg tega pa lahko napetost posameznega para normiramo tako, da jo delimo z želeno ali s trenutno razdaljo.
 
-Slika~\ref{f-zoo-mds} kaže zemljevid živali. Razdalje med pari živali so izračunane kot evklidske razdalje med atributi, ki jih opisujejo. Točke, ki predstavljajo živali, smo obarvali glede na vrsto -- vijolični so sesalci, rdeče ptice, oranžno žuželke. Povezani so pari živali, ki so si med seboj najbolj podobne.
+Slika~\ref{f-zoo-mds} kaže zemljevid živali. Razdalje med pari živali so izračunane kot evklidske razdalje med atributi, ki jih opisujejo. Točke, ki predstavljajo živali, smo obarvali glede na vrsto -- vijolični so sesalci, rdeče ptice, oranžno žuželke. Povezani so pari živali, ki so si med seboj najbolj podobni.
 
 \begin{figure}[tbp]
 \begin{center}
