@@ -1,3 +1,5 @@
 **/koda/*.pdf
 **/koda/*.svg
 .DS_Store
+zapiski/**/*.pdf
+copy-to-repo
