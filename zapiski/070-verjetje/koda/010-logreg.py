@@ -11,7 +11,7 @@ class LogReg:
     def __call__(self, x):
         # linearna kombinacija vhodov
         z = sum(w * xi for w, xi in zip(self.weights, x)) + self.b
-        # sigmoid aktivacijska funkcija
+        # sigmoidna aktivacijska funkcija
         return z.sigmoid()
     
     def parameters(self):

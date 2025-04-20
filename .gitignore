@@ -1,5 +1,10 @@
 **/koda/*.pdf
 **/koda/*.svg
+**/koda/*.png
+**/koda/*.jpg
+**/koda/*.jpeg
 .DS_Store
 zapiski/**/*.pdf
 copy-to-repo
+tmp*
+__pycache__

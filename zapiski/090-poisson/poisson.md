@@ -95,22 +95,22 @@ Verjetnost, da pri danih vhodih \( \mathbf{x} \) opazimo izhodno vrednost \( y \
 P(y \mid \mathbf{x}, \boldsymbol{\beta}) = \frac{e^{-e^{\boldsymbol{\beta}^\top \mathbf{x}}} \cdot \left(e^{\boldsymbol{\beta}^\top \mathbf{x}}\right)^y}{y!}
 \]
 
-Ker želimo model naučiti iz podatkov, maksimiziramo verjetnost celotne učne množice. Če predpostavimo, da so primeri \( (\mathbf{x}^{(i)}, y^{(i)}) \) za \( i = 1, \dots, n \) **neodvisni**, potem je skupna verjetnost produkt posameznih:
+Ker želimo model naučiti iz podatkov, maksimiziramo verjetnost celotne učne množice. Če predpostavimo, da so primeri \( (\mathbf{x}_i, y_i) \) za \( i = 1, \dots, n \) **neodvisni**, potem je skupna verjetnost produkt posameznih:
 
 \[
-P(\mathbf{y} \mid \mathbf{X}, \boldsymbol{\beta}) = \prod_{i=1}^n P(y^{(i)} \mid \mathbf{x}^{(i)}, \boldsymbol{\beta})
+P(\mathbf{y} \mid \mathbf{X}, \boldsymbol{\beta}) = \prod_{i=1}^n P(y_i \mid \mathbf{x}_i, \boldsymbol{\beta})
 \]
 
 Logaritem te skupne verjetnosti, to je, **logaritem verjetja**, je torej vsota logaritemskih izrazov:
 
 \[
-\log P(\mathbf{y} \mid \mathbf{X}, \boldsymbol{\beta}) = \sum_{i=1}^n \left( y^{(i)} \cdot \boldsymbol{\beta}^\top \mathbf{x}^{(i)} - e^{\boldsymbol{\beta}^\top \mathbf{x}^{(i)}} - \log y^{(i)}! \right)
+\log P(\mathbf{y} \mid \mathbf{X}, \boldsymbol{\beta}) = \sum_{i=1}^n \left( y_i \cdot \boldsymbol{\beta}^\top \mathbf{x}_i - e^{\boldsymbol{\beta}^\top \mathbf{x}_i} - \log y_i! \right)
 \]
 
-Ker člen \( \log y^{(i)}! \) ne vsebuje parametrov \( \boldsymbol{\beta} \) je torej konstanten in ga lahko pri optimizaciji izpustimo. Dobimo poenostavljeno kriterijsko funkcijo:
+Ker člen \( \log y_i! \) ne vsebuje parametrov \( \boldsymbol{\beta} \) je torej konstanten in ga lahko pri optimizaciji izpustimo. Dobimo poenostavljeno kriterijsko funkcijo:
 
 \[
-\ell(\boldsymbol{\beta}) = \sum_{i=1}^n \left( y^{(i)} \cdot \boldsymbol{\beta}^\top \mathbf{x}^{(i)} - e^{\boldsymbol{\beta}^\top \mathbf{x}^{(i)}} \right)
+\ell(\boldsymbol{\beta}) = \sum_{i=1}^n \left( y_i \cdot \boldsymbol{\beta}^\top \mathbf{x}_i - e^{\boldsymbol{\beta}^\top \mathbf{x}_i} \right)
 \]
 
 To je funkcija, ki jo maksimiziramo pri učenju modela s pomočjo gradientnega spusta ali drugih optimizacijskih tehnik.
@@ -182,7 +182,7 @@ Konvergenca učenja je tokrat hitra, parametri modela pa pričakovano popolnoma 
 ```python
 >>> error = sum([abs(y - model(x).data) for x, y in zip(X_test, ys_test)]) 
 >>> mae = error / len(X_test)
->>> print(f"{mae:.1}")
+>>> print(f"{mae:.1f}")
 2.2
 ```
 
@@ -194,8 +194,10 @@ Napaka je za faktor 10 manjša kot pri linearni regresiji! Linearna regresija, p
 
 ```python
 n = 1000
-X = [[random.uniform(-1, 1) for _ in range(3)] for _ in range(n)]
-ys = [np.random.poisson(np.exp(2*x[0] + 3*x[1] - x[2] + 1)) for x in X]
+X = [[random.uniform(-1, 1) for _ in range(3)] 
+     for _ in range(n)]
+ys = [np.random.poisson(np.exp(2*x[0] + 3*x[1] - x[2] + 1))
+      for x in X]
 ```
 
 Zato ni čudno, da je Poissonova regresija zgradila tako dober model. Tudi uteži v linearni kombinaciji atributov je optimizacija dobro zadela. 

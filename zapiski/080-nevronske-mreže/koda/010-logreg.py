@@ -11,7 +11,7 @@ class LogReg:
     def __call__(self, x):
         # linearna kombinacija vhodov
         z = sum(w * xi for w, xi in zip(self.weights, x)) + self.b
-        # sigmoid aktivacijska funkcija
+        # sigmoidna aktivacijska funkcija
         return z.sigmoid()
     
     def parameters(self):
@@ -38,15 +38,6 @@ X, ys = make_moons(n_samples=n, noise=0.1)
 X0 = [x for x, y in zip(X, ys) if y == 0]
 X1 = [x for x, y in zip(X, ys) if y == 1]
 
-
-plt.figure(figsize=(10, 8))
-plt.scatter([x[0] for x in X0], [x[1] for x in X0], c='blue', label='y=0')
-plt.scatter([x[0] for x in X1], [x[1] for x in X1], c='red', label='y=1')
-plt.xlabel('x1')
-plt.ylabel('x2')
-plt.title('Podatki z nelinearno ločljivim razredom')
-plt.savefig("lunice.svg")
-
 model = LogReg(2)
 print(model(X[0]))
 
@@ -63,7 +54,7 @@ def train(model, X, ys, learning_rate=0.001, n_epochs=1000, batch_size=10):
             p.data -= learning_rate * p.grad
         
         if k % 50 == 0:
-            print(f"{k:3} Loss: {model.loss(X, ys).data:5.3f} {model}")
+            print(f"{k:3} Loss: {model.loss(X, ys).data:5.3f} {model")
     return model
 
 model = train(model, X, ys, n_epochs=2000, batch_size=20, learning_rate=0.03)

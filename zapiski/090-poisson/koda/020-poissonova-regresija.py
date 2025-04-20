@@ -67,8 +67,8 @@ ys = df.iloc[:, -1].values  # zadnji stolpec
 # razdeli podatke na učne in testne
 X_train, X_test, ys_train, ys_test = train_test_split(X, ys, test_size=0.5, random_state=42)
 
-# model = LinReg(n_inputs=X.shape[1])
-model = PoissonReg(n_inputs=X.shape[1])
+model = LinReg(n_inputs=X.shape[1])
+# model = PoissonReg(n_inputs=X.shape[1])
 
 # učenje modela
 model = train(model, X_train, ys_train, n_epochs=1000, batch_size=20, learning_rate=0.01)
