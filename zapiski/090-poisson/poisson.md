@@ -12,6 +12,8 @@ Začnimo tokrat s podatki. Na voljo imamo tokrat 1000 primerov, danih v datoteki
 
 Podatki vsebujejo tri neodvisne spremenljivke in eno odvisno, in zanima nas seveda model, ki bi znal dobro napovedovati vrednost odvisne spremenljivke iz vrednosti neodvisnih.
 
+> **Koda**: programska koda tega poglavja zapiskov s predavanj je dostopna na [GitHub-u](https://github.com/BlazZupan/uozp-zapiski/tree/main/zapiski/090-poisson/koda).
+
 ## Poskus z linearno regresijo
 
 Problem zgleda kot nalašč za našo mutlivariatno linearno regresijo iz prejšnjih poglavij, in kot inženirji lahko kar poskusimo z njo.
