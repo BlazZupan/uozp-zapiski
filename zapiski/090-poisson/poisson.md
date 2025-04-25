@@ -16,7 +16,7 @@ Podatki vsebujejo tri neodvisne spremenljivke in eno odvisno, in zanima nas seve
 
 ## Poskus z linearno regresijo
 
-Problem zgleda kot nalašč za našo mutlivariatno linearno regresijo iz prejšnjih poglavij, in kot inženirji lahko kar poskusimo z njo.
+Problem izgleda kot nalašč za našo mutlivariatno linearno regresijo iz prejšnjih poglavij, in kot inženirji lahko kar poskusimo z njo.
 
 ```python
 >>> df = pd.read_excel('data.xlsx')
