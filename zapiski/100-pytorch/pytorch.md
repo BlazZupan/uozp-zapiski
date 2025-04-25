@@ -64,7 +64,7 @@ model = nn.Linear(X.shape[1], 1)
 optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
 ```
 
-Za učenje potrebujemo le še določiti funkcijo izgube. Skladno z modelom uporabimo povprečno vrednost kvadratne napake, `MSELoss`. Osnovna zanka, ki vsakič izvede en korak optimizacije, je:
+Za učenje moramo določiti le še funkcijo izgube. Skladno z modelom uporabimo povprečno vrednost kvadratne napake, `MSELoss`. Osnovna zanka, ki vsakič izvede en korak optimizacije, je:
 
 ```python
 for epoch in range(10000):
@@ -205,7 +205,7 @@ wrist    : -0.0025
 
 ## Prestrukturiranje kode
 
-Zgornja koda naše regularizirane linearne regresije se je razrasla, in tudi če bralec pogleda datoteko z njeno celotno implementacijo (glej [GitHub](https://github.com/BlazZupan/uozp-zapiski/tree/main/zapiski/100-pytorch/koda)), nam kača, ki smo jo zgradili, ni ravno v ponos. Pa tudi, nestrukturiranost nas bo ovirala pri razvoju konceptov, ki jih v nadaljevanju tega poglavja nameravamo še zgraditi. Primer lepo strukturirane kode za gradnjo modelov strojnega učenja je knjižnica scikit-learn (oziroma krajše `sklearn`), ki v osnovi v razredih modelov implementira funkciji `.fit` za učenje in `.predict` za napovedovanje. Primer linearne regresije v tej knjižnici je na primer:
+Zgornja koda naše regularizirane linearne regresije se je razrasla, in tudi če bralec pogleda datoteko z njeno celotno implementacijo (glej [GitHub](https://github.com/BlazZupan/uozp-zapiski/tree/main/zapiski/100-pytorch/koda)), nam kača, ki smo jo zgradili, ni ravno v ponos. Nestrukturiranost nas bo ovirala pri razvoju konceptov, ki jih še nameravamo zgraditi. Primer lepe strukture kode za gradnjo modelov strojnega učenja je knjižnica scikit-learn (oziroma krajše `sklearn`), ki modele definira kot razrede z metodoma `.fit` za učenje in `.predict` za napovedovanje. Linearna regresija se v `sklearn` uporabi takole:
 
 ```python
 from sklearn.linear_model import LinearRegression
@@ -215,7 +215,7 @@ model.fit(X_train, y_train)     # učimo model
 y_pred = model.predict(X_test)  # zgradimo napovedi
 ```
 
-Želja v tem podpoglavju je strukturirati našo kodo tako, da bo njena zgradba podobna modelom iz knjižnice `sklearn`:
+Strukturirajmo našo kodo tako, da bo podobna modelom iz knjižnice `sklearn`:
 
 ```python
 class LassoRegression():
@@ -281,7 +281,7 @@ class LassoRegression():
         return self
 ```
 
-Od metod ki so lastne razredu smo zgoraj še izpustili `print_feature_importance()`, ki pa se ukvarja v glavnem samo z izpisom in jo zato tu ne bomo posebej obravnavali.
+Zgoraj smo izpustili metodo `print_feature_importance()`, ki se ukvarja samo z izpisom in je zato ne bomo posebej obravnavali.
 
 Uporaba našega modela je zdaj preprosta:
 
@@ -340,7 +340,7 @@ Pravzaprav bi bilo nekaj sto epoh sedaj za učenje dovolj.
 
 Vsa koda zgoraj vsebuje dokaj prikrito napako, ki morda ni usodna, ampak konceptualno še vedno velika. In sicer standardiziramo vse podatke naenkrat, potem pa razdelimo podatke na učno in testno množico. Standardizacija je torej testno množico že "videla", kar je seveda narobe in vsaj v nekem majhnem delu vodi v preoptimistične napovedi. Pravilno bi bilo, da bi se standardizacije naučili na učni množici ter jo potem kot tako uporabili vsakič, ko napovedujemo. Naučiti se standardizacije v našem primeru pomeni, da na učni množici ocenimo povprečje in standardni odklon, si ga zapomnimo, in potem to uporabimo na podatkih, za katere napovedujemo razred.
 
-Zgornji popravek lahko implementiramo na dva načina. Po "domače" bi lahko iz učne množice izračunali standardizacijske parametere in si jih zapomnili, lahko pa uporabimo from `StandardScaler` iz knjižnice `sklearn`, ki je bil razvit v prav te namene, torej ločeno učenje in uporabo. Koda, ki jo moramo primerno razporediti po naši implementaciji je:
+Zgornji popravek lahko implementiramo na dva načina. Po "domače" bi lahko iz učne množice izračunali standardizacijske parametere in si jih zapomnili, lahko pa uporabimo `StandardScaler` iz knjižnice `sklearn`, ki je bil razvit v prav te namene, torej ločeno učenje in uporabo. Koda, ki jo moramo primerno razporediti po naši implementaciji je:
 
 ```python
 self.scaler = StandardScaler()  # ob inicializaciji razreda
@@ -350,7 +350,7 @@ X = self.scaler.transform(X)  # ob klicu predict()
 
 ## Vpliv stopnje regularizacije na točnost
 
-Točnost modela tako na učnih kot na testnih podatkih je seveda odvisna od stopnje regularizacije. Vsaj na učnih podatkih je ta povezava zelo jasna: višja je stopnja regularizacije, bolj se optimizacija usmeri v zmanjšanje vrednosti uteži in manj je osredotočena na zmanjševanje napake. Kako to vpliva na točnost na testnih podatkih pa bo zelo odvisno od podatkov, a kar pričakujemo je: kompleksni (neregularizirani) modeli se morda lahko preveč prilagodijo učnim podatkom in je zato njihova točnost na testnih podatkih manjša. Prav tako pa bo točnost na testnih podatkih majhna pri enostavnejših, močno zreguliranih modelih. Morda te razlike, vsaj pri manjših regularizacijah, ne bodo tako opazne pri linearni regresiji saj je model že sam po sebi enostaven. Čas je sicer, da poskusimo.
+Točnost modela je seveda odvisna od stopnje regularizacije. Vsaj na učnih podatkih je ta povezava zelo jasna: višja je stopnja regularizacije, večja bo napaka, ker se optimizacija usmeri tudi v zmanjšanje vrednosti uteži in je posledično manj osredotočena na zmanjševanje napake. Točnost na testnih podatkih pa bo zelo odvisna od podatkov in stopnje regularizacije, a pričakujemo, da se prekompleksni (neregularizirani) modeli preveč prilagodijo učnim podatkom in je zato njihova točnost na testnih podatkih manjša. Prav tako pa bo točnost na testnih podatkih majhna pri preveč enostavnih, močno zreguliranih modelih. Morda te razlike pri linearni regresiji ne bodo tako opazne, saj je model že sam po sebi enostaven. Čas je sicer, da poskusimo.
 
 ```python
 print("lambda atts  MAE-test MAE-train")
@@ -382,13 +382,13 @@ lambda atts  MAE-test MAE-train
 0.500     0    6.13    6.56
 ```
 
-Kot smo že predpostavili so razlike pri manjših regularizacijah manjše in najbrž statistično neznačilne. Seveda so ti rezultati tudi odvisni od vzorčenja, zato moramo biti pri zaključkih previdni. Je res prav, da na podlagi zgornjega izberemo stopnjo regularizacije okoli 0.025?
+Kot smo že predpostavili, so razlike pri manjših regularizacijah manjše in najbrž statistično neznačilne. Ker so rezultati odvisni od vzorčenja, moramo biti pri zaključkih previdni. Je res prav, da na podlagi zgornjega izberemo stopnjo regularizacije okoli 0.025?
 
 ## Izbor stopnje regularizacije z notranjim prečnim preverjanjem
 
 Najbrž smo ob kodi, kot je zgornja, v skušnjavi, da že kar rečemo, kakšna je "prava" vrednost regularizacije z ozirom na točnost na testnih podatkih in potem iz zgornje tabele to točnost odčitali in jo vzeli za oceno našega modela. To bi bilo napačno: vrednost parametra optimizacije bi na ta način prilagodili naši testni množici, torej na množici, ki jo pri izboru modela, njegovih parametrov, ali pa meta parametrov postopka učenja sploh ne bi smeli uporabiti in bi jo lahko uporabili samo za ocenjevanje točnost že zgrajenega modela po tem, ko sprejmemo vse odločitve, kako bomo model dejansko zgradili.
 
-Ocena točosti je namreč tista, ki nam pove, kako natančen bo model takrat, ko ga bomo uporabili na novih podatkih. Del gradnje modela je tudi ocena primerne vrednosti stopnje regularizacije, za katero nikakor ne smemo uporabiti testne podatke.
+Ocena točnosti je namreč tista, ki nam pove, kako natančen bo model takrat, ko ga bomo uporabili na novih podatkih. Del gradnje modela je tudi ocena primerne vrednosti stopnje regularizacije, za katero nikakor ne smemo uporabiti testnih podatkov.
 
 Ocenjevanje stopnje regularizacije moramo torej opraviti samo na učnih podatkih. Ta tudi ne bi smela biti odvisna od ene same delitve učnih podatkov na tiste, na katerih bomo model gradili in na tiste, ki jih bomo uporabili za oceno učinka regularizacije.
 
@@ -482,7 +482,7 @@ def fit(self, X, y, lambda_values=[0.001, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5]):
 
 Prikazali smo samo implementacijo treh funkcij spremenjenega razreda `LassoRegression`, ostali deli tega razreda so ostali večinoma taki, kot smo jih razvili v prejšnjih delih tega poglavja. Učenje modela linearne regresije z dano regularizacijsko stopnjo tokrat opravi `fit_one()`, v funkciji `fit()` pa s prečnim preverjanjem najprej ocenimo predvidene točnosti pri različnih izbranih stopnjah regularizacije, nato pa za gradnjo modela na celotnih učnih podatkih izberemo tisto z največjo ocenjeno točnostjo.
 
-Dobljeni model, katerega gradnja ni videla testnih podatkov, zdaj testiramo na teh, in obenem še izpišemo v notranjem prečnem preverjanju (tako imenujemo zgornji postopek) ocenjeno stopnjo regularizacije.
+Dobljeni model, katerega gradnja ni videla testnih podatkov, zdaj testiramo na teh, in obenem še izpišemo v **notranjem prečnem preverjanju** (tako imenujemo zgornji postopek) ocenjeno stopnjo regularizacije.
 
 ```python
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5, random_state=42)
@@ -500,7 +500,7 @@ Poženemo vse skupaj:
 MAE-test: 3.53, lambda: 0.0010
 ```
 
-## Še en dodatek in smo končali
+## Še zunanje prečno preverjanje
 
 Še zadnji problem, ki ga moramo rešiti: točnost našega modela smo zgoraj ocenili z enim samim vzorčenjem, in ta je pri majhnin podatkih lahko odvisna od vzorca. Boljša ocena točnosti bi uporabila prečno preverjanje. Pri vsakem od teh bi dobili "najboljšo" stopnjo regularizacije, poročati pa bi torej morali potem o povprečni točnosti, in povprečni najboljši stopnji regularizacije. Končni model, za katerega veljajo te ocene, zgradimo s to stopnjo potem na celotnih podatkih. Nekako takole:
 
