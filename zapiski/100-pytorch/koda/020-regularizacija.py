@@ -23,7 +23,7 @@ X_test, ys_test = to_tensor(X_test), to_tensor(ys_test).view(-1, 1)
 model = nn.Linear(X.shape[1], 1)
 optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
 # optimizer = torch.optim.Adam(model.parameters(), lr=0.1)
-lambda_reg = 0.01
+lambda_reg = 0.001
 
 def soft_threshold(param, lmbd):
     with torch.no_grad():
