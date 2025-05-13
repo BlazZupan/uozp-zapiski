@@ -6,7 +6,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
 
 # parametri
-SIGNAL_LENGTH = 500  # dolžina naših ekg signalov
 BATCH_SIZE = 32  # velikost podatkov pri paketnem učenju
 EPOCHS = 30  # število iteracij učenja
 LEARNING_RATE = 0.005  # stopnja učenja
@@ -141,3 +140,13 @@ print(confusion_matrix(y_test_tensor.numpy(), predicted.numpy()))
 # shrani model
 torch.save(model.state_dict(), 'ecg_cnn_model.pth')
 print("Model saved as 'ecg_cnn_model.pth'")
+
+# poročaj o številu parametrov v vsaki plasti
+print("\nNumber of parameters in each layer:")
+total_params = 0
+for name, param in model.named_parameters():
+    if param.requires_grad:
+        num_params = param.numel()
+        print(f"{name}: {num_params:,}")
+        total_params += num_params
+print(f"Total trainable parameters: {total_params:,}")

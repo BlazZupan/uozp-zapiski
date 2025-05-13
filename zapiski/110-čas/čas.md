@@ -288,6 +288,34 @@ fc.4.weight torch.Size([4, 64])
 fc.4.bias torch.Size([4])
 ```
 
+Število parametrov lahko izračunamo tudi z malce programiranja, brez, da bi računali ročno:
+
+```python
+print("\nNumber of parameters in each layer:")
+total_params = 0
+for name, param in model.named_parameters():
+    if param.requires_grad:
+        num_params = param.numel()
+        print(f"{name}: {num_params:,}")
+        total_params += num_params
+print(f"Total trainable parameters: {total_params:,}")
+```
+
+Konstrukt `if param.requires_grad:` je tu za vsak slučaj, saj so vsi parametri modeli taki, da za njih računamo gradiente. Z `param.numel()` dobimo število elementov (parametrov) v danem PyTorch tenzorju. Koda izpiše:
+
+```python
+Number of parameters in each layer:
+fc.0.weight: 57,600
+fc.0.bias: 128
+fc.2.weight: 8,192
+fc.2.bias: 64
+fc.4.weight: 256
+fc.4.bias: 4
+Total trainable parameters: 66,244
+```
+
+Podobno, torej, kar smo računali peš že zgoraj.
+
 # Klasifikacija s konvolucijsko nevronsko mrežo
 
 Model s polno povezanimi nivoji je kompleksen, in bi bil še kompleksnejši, če bi uporabili ali časovno daljše vhodne signale ali pa če bi bolj pogosto vzorčili. Tudi v namene zmanjšanja te kompleksnosti, pa tudi zaradi tega, ker bi bilo prav, da se na vhodnem delu mreže nevroni osredotočijo le na del vhodnega signala, je bila predlagana t.im. konvolucijska nevronska mreža. Začnimo kar z modelom:
@@ -340,30 +368,61 @@ Plast `nn.Conv1d(1, 16, kernel_size=5, stride=3, padding=2)` je enodimenzionalna
 Če je vhodna oblika signala **\[batch, 1, 450]** (kjer je batch število primerov v paketu, pri nas 32), potem so dimenzije izhoda po prvem nivoju naslednje:
 
 1. **`nn.Conv1d(1, 16, kernel_size=5, stride=3, padding=2)`**
-   Izhodna dolžina:
+   Ta plast zgradi torej 16 različnih filtrov, vak dolžine 5, torej 80 uteži s 16 začetnimi vrednostmi. Ko filtre apliciramo na vhodni signal, se nam na izhodu dolžina vektorjev zmanjša iz vhodnih 450 na 150, a je teh 16, kar ustreza 16 izhodnim kanalom, po en za vsak filter:
 
    $$
    \left\lfloor \frac{450 + 2 \cdot 2 - 5}{3} \right\rfloor + 1 = \left\lfloor \frac{449}{3} \right\rfloor + 1 = 149 + 1 = 150
    $$
 
-   Oblika: **\[batch, 16, 150]**
+   Oblika izhoda je torej [batch, 16, 150].
 
-2. **`nn.BatchNorm1d(16)`** in **`ReLU()`** ne spremenita oblike: **\[batch, 16, 150]**
+2. Operaciji **`nn.BatchNorm1d(16)`** in **`ReLU()`** ne spremenita oblike, njun izhod je še vedno oblike **\[batch, 16, 150]**. Sloj `nn.BatchNorm1d(16)` doda 2 parametra na kanal (skaliranje in premik), torej vse skupaj \( 2\times 16=32 \) parametrov. Plast `ReLU()` ne doda nobenih parametrov.
 
-3. **`nn.MaxPool1d(kernel_size=2)`**
-   Zmanjša dolžino za polovico:
+3. Plast **`nn.MaxPool1d(kernel_size=2)`** v vsakem kanalu vzame dve zaporedni vrednosti in vrne večjo vrednost. V vsakem kanalu torej prepolovi dolžino signala. Končna oblika podatkov po prvem konvolucijskem nivoju je torej [batch, 16, 75].
 
    $$
    \left\lfloor \frac{150}{2} \right\rfloor = 75
    $$
 
-Končna oblika podatkov po prvem nivoju: [batch, 16, 75].
 
-Drugi konvolucijski blok še dodatno obdeluje 16 kanalov z novimi 16 filtri dolžine 5, pri čemer se signal zaradi `stride=3` dodatno skrči. Sledi normalizacija in nelinearnost, nato pa `AdaptiveAvgPool1d(1)`, ki vsak kanal povpreči po celotni dolžini in rezultat skrči v obliko `[batch, 16, 1]`, kar omogoča fiksno velik izhod, neodvisen od dolžine signala.
+Drugi konvolucijski blok še dodatno obdeluje nastalih 16 kanalov dolžine 75 z novimi 16 filtri dolžine 5, pri čemer se signal zaradi `stride=3` dodatno skrči. Sledi normalizacija in nelinearnost, nato pa `AdaptiveAvgPool1d(1)`, ki vsak kanal povpreči po celotni dolžini in rezultat skrči v obliko `[batch, 16, 1]`, kar omogoča fiksno velik izhod, neodvisen od dolžine signala.
+
+4. **`nn.Conv1d(16, 16, kernel_size=5, stride=3, padding=2)`**
+   Ta plast prejme 16 vhodnih kanalov in za vsak izhodni kanal zgradi 16 filtrov (po enega za vsak vhodni kanal), torej skupaj $16 \times 16 \times 5 = 1280$ uteži in dodatnih 16 začetnih vrednosti. Vsak izhodni kanal dobi en filter dolžine 5 za vsak vhodni kanal, torej \( 16\times 5=80 \) utreži ter eno skupno začetno vrednost.
+
+   Vhodna dolžina je 75 (iz prejšnje plasti), zato bo dolžina na izhodu:
+
+   $$
+   \left\lfloor \frac{75 + 2 \cdot 2 - 5}{3} \right\rfloor + 1 = \left\lfloor \frac{74}{3} \right\rfloor + 1 = 24 + 1 = 25
+   $$
+
+   Oblika izhoda je torej **\[batch, 16, 25]**, kjer imamo ponovno 16 kanalov (en za vsak nov filter) in na vsakem niz (vektor) z 25 elementi
+
+5. Operaciji **`nn.BatchNorm1d(16)`** in **`ReLU()`** ne spremenita oblike — izhod je še vedno **\[batch, 16, 25]**.
+   `BatchNorm1d(16)` doda še enkrat $2 \times 16 = 32$ parametrov, `ReLU()` ne doda nič.
+
+6. Plast **`nn.AdaptiveAvgPool1d(1)`** povpreči vrednosti v vsakem kanalu vzdolž zadnje dimenzije dolžine 25 in iz nje vrne le povprečno vrednost kanala. Izhodna oblika postane **\[batch, 16, 1]**. Ta plast nima parametrov, saj gre samo za povprečenje — iz vsakega kanala ta plast naredi **povzetek** (povprečje) po času. V imenu je `Adaptive` saj ta plast računa povprečje po segmentih vhodnega signala tako, da vedno vrne signal želene dolžine output_size, ne glede na vhodno dolžino. Tu je parameter `1`, a če bi bil npr. `4`, bi plast samodejno razdelila signal na 4 enakomerne segmente po 25 vrednosti in vrnila štiri povprečja na kanal, torej [batch, 16, 4].
 
 Del `self.fc` je zaključni klasifikacijski del mreže. Prva plast `nn.Linear(16, 16)` prejme 16 povprečnih vrednosti (po ena za vsak kanal) in jih pretvori v nov 16-dimenzionalni predstavitveni vektor. `ReLU()` doda nelinearnost, nato pa `nn.Linear(16, num_classes)` pretvori ta vektor v toliko logitov, kolikor je razredov. Ti logiti se nato uporabijo v funkciji izgube (npr. `CrossEntropyLoss`) za izračun napake in učenje modela.
 
-Celoten model je odvisen od (samo!) 1796 parametrov. Primerjajmo z mrežo iz prejšnjega poglavja, s skoraj 40-krat več parametri! Prva konvolucijska plast ima 96 parametrov, druga 1296, vsaka normalizacija po 32. Popolnoma povezani del doda še 272 parametrov v prvi linearni plasti in 68 v izhodni (pri 4 razredih). Gre za lahek model, primeren za klasifikacijo krajših časovnih signalov.
+Celoten model je odvisen od (samo!) 1796 parametrov. Primerjajmo z mrežo iz prejšnjega poglavja, s skoraj 40-krat več parametri! Prva konvolucijska plast ima 96 parametrov, druga 1296, vsaka normalizacija po 32. Popolnoma povezani del doda še 272 parametrov v prvi linearni plasti in 68 v izhodni (pri 4 razredih). Gre za lahek model, primeren za klasifikacijo krajših časovnih signalov (koda za izpis števila parametrov po nivojih mrež je enaka kot pri polno povezani nevronski mreži):
+
+```python
+Number of parameters in each layer:
+conv_layers.0.weight: 80
+conv_layers.0.bias: 16
+conv_layers.1.weight: 16
+conv_layers.1.bias: 16
+conv_layers.4.weight: 1,280
+conv_layers.4.bias: 16
+conv_layers.5.weight: 16
+conv_layers.5.bias: 16
+fc.0.weight: 256
+fc.0.bias: 16
+fc.2.weight: 64
+fc.2.bias: 4
+Total trainable parameters: 1,796
+```
 
 Funkcija `forward` določa, kako model obdeluje vhodne podatke. Najprej `x` (vhodni signal oblike `[batch, 1, length]`) potuje skozi konvolucijske plasti (`self.conv_layers`), kjer se izračunajo lokalne spremenljivke in zmanjša dimenzija. Nato se rezultat preoblikuje z `x.view(x.size(0), -1)` v matriko oblike `[batch, features]`, torej splošči vse dimenzije razen velikosti paketa. Na koncu se ta vektor pošlje polno povezanim plastem (`self.fc`), ki vrnejo logite za razvrščanje v razrede.
 
