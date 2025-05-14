@@ -1,0 +1,53 @@
+// SHAP lattice
+digraph {
+	rankdir=TB
+	node [fillcolor=lightgray shape=circle style=filled]
+	"∅" [label="∅
+100"]
+	A [label="A
+80"]
+	B [label="B
+50"]
+	C [label="C
+130"]
+	AB [label="AB
+40"]
+	AC [label="AC
+90"]
+	BC [label="BC
+80"]
+	ABC [label="ABC
+90"]
+	{
+		rank=same
+		"∅"
+	}
+	{
+		rank=same
+		A
+		B
+		C
+	}
+	{
+		rank=same
+		AB
+		AC
+		BC
+	}
+	{
+		rank=same
+		ABC
+	}
+	"∅" -> A [label=-20]
+	"∅" -> B [label=-50]
+	"∅" -> C [label="+30"]
+	A -> AB [label=-40]
+	A -> AC [label="+10"]
+	B -> AB [label=-10]
+	B -> BC [label="+30"]
+	C -> AC [label=-40]
+	C -> BC [label=-50]
+	AB -> ABC [label="+50"]
+	AC -> ABC [label=0]
+	BC -> ABC [label="+10"]
+}

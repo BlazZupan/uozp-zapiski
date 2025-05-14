@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 # Parameters
 SIGNAL_LENGTH = 500  # Length of our ECG signals
 BATCH_SIZE = 32
-EPOCHS = 10
+EPOCHS = 30
 LEARNING_RATE = 0.01
 
 # Custom Dataset
@@ -45,9 +45,6 @@ class LoadData:
         if X_tensor.ndim == 2:
             X_tensor = X_tensor.unsqueeze(1)
         y_tensor = torch.tensor(self.y, dtype=torch.long)
-        if device is not None:
-            X_tensor = X_tensor.to(device)
-            y_tensor = y_tensor.to(device)
         return X_tensor, y_tensor
 
     def get_num_classes(self):
@@ -55,26 +52,28 @@ class LoadData:
 
 # Variational Autoencoder Model
 class VAE(nn.Module):
-    def __init__(self, signal_length, latent_dim=10):  # Increased latent dimension
+    def __init__(self, signal_length, latent_dim=2):  # Increased latent dimension
         super().__init__()
         self.encoder = nn.Sequential(
-            nn.Conv1d(1, 32, kernel_size=5, stride=1, padding=2),
-            nn.BatchNorm1d(32),
+            # prvi konvolucijski blok
+            nn.Conv1d(1, 16, kernel_size=5, stride=3, padding=2),
+            nn.BatchNorm1d(16),
             nn.ReLU(),
             nn.MaxPool1d(kernel_size=2),
-            nn.Conv1d(32, 32, kernel_size=5, stride=1, padding=2),
-            nn.BatchNorm1d(32),
+            
+            # drugi konvolucijski blok
+            nn.Conv1d(16, 16, kernel_size=5, stride=3, padding=2),
+            nn.BatchNorm1d(16),
             nn.ReLU(),
-            nn.AdaptiveAvgPool1d(1),  # Global average pooling
-            nn.Dropout(0.5)  # Added dropout
+            nn.AdaptiveAvgPool1d(1)  # globalno povprečno združevanje
         )
-        self.fc_mu = nn.Linear(32, latent_dim)
-        self.fc_logvar = nn.Linear(32, latent_dim)
-        self.decoder_fc = nn.Linear(latent_dim, 32)
+        self.fc_mu = nn.Linear(16, latent_dim)
+        self.fc_logvar = nn.Linear(16, latent_dim)
+        self.decoder_fc = nn.Linear(latent_dim, 16)
         self.decoder = nn.Sequential(
-            nn.ConvTranspose1d(32, 32, kernel_size=signal_length//2, stride=signal_length//2),
+            nn.ConvTranspose1d(16, 16, kernel_size=signal_length//2, stride=signal_length//2),
             nn.ReLU(),
-            nn.ConvTranspose1d(32, 1, kernel_size=1),
+            nn.ConvTranspose1d(16, 1, kernel_size=1),
         )
         self.signal_length = signal_length
 
@@ -97,6 +96,7 @@ class VAE(nn.Module):
         x = self.decoder(x)
         x = x[:, :, :self.signal_length]  # Ensure output length matches input
         return x
+    
     def forward(self, x):
         mu, logvar = self.encode(x)
         z = self.reparameterize(mu, logvar)
@@ -105,38 +105,30 @@ class VAE(nn.Module):
 
 
 # VAE Loss function
-def vae_loss(recon_x, x, mu, logvar, beta=10.0):
+def vae_loss(recon_x, x, mu, logvar, beta=0.01):
      recon_loss = nn.functional.mse_loss(recon_x, x, reduction='mean')
      kld = -0.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp())
      return recon_loss + beta * kld, recon_loss, kld
 
-# def vae_loss(recon_x, x, mu, logvar):
-#     # Reconstruction loss (MSE)
-#     recon_loss = nn.functional.mse_loss(recon_x, x, reduction='mean')
-#     # KL divergence
-#     kld = -0.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp())
-#     return recon_loss + kld, recon_loss, kld
-
 # Training Setup
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-print(f"Using device: {device}")
+print("Starting training...")
 
 # Load data (no split)
 loader = LoadData('ecg-two-classes.npz', batch_size=BATCH_SIZE)
 signal_length = loader.X.shape[-1]
 data_loader = loader.get_loader(ToTensorDataset)
-X_all, y_all = loader.get_all_data(device)
+X_all, y_all = loader.get_all_data()
 
 print(f"Signal length: {signal_length}")
 print(f"Size of the dataset: {len(loader.X)}")
 print()
 
-model = VAE(signal_length, latent_dim=2).to(device)
+model = VAE(signal_length, latent_dim=2)
 optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
 # Training Loop
 # Training Loop with weighted KL divergence
-beta = 5.0  # Weight for KL divergence
+beta = 0.005  # Weight for KL divergence
 print("Starting training...")
 for epoch in range(EPOCHS):
     model.train()
@@ -144,7 +136,6 @@ for epoch in range(EPOCHS):
     total_recon = 0
     total_kld = 0
     for X_batch, _ in data_loader:
-        X_batch = X_batch.to(device)
         optimizer.zero_grad()
         X_recon, mu, logvar, _ = model(X_batch)
         loss, recon_loss, kld = vae_loss(X_recon, X_batch, mu, logvar, beta=beta)
@@ -165,8 +156,8 @@ with torch.no_grad():
 print(f"Total VAE Loss: {loss:.6f} | Recon Loss: {recon_loss:.6f} | KLD: {kld:.6f}")
 
 # Plot 2D bottleneck embeddings colored by class
-z_np = z.cpu().numpy()
-y_all_np = y_all.cpu().numpy()
+z_np = z.numpy()
+y_all_np = y_all.numpy()
 plt.figure(figsize=(8, 6))
 for c in np.unique(y_all_np):
     plt.scatter(z_np[y_all_np == c, 0], z_np[y_all_np == c, 1], label=f"Class {c}", alpha=0.6)
@@ -180,20 +171,27 @@ plt.savefig("vae-autoencoder-two.svg")
 plt.show()
 print("2D embedding plot saved as 'vae-autoencoder-two.svg'")
 
-# Pick a random input signal and show the reconstruction
-# idx = 30
-# X_random = X_all[idx:idx+1].to(device)  # shape [1, 1, signal_length]
-# with torch.no_grad():
-#     X_recon, _, _, _ = model(X_random)
-# X_orig = X_random.cpu().squeeze().numpy()
-# X_recon = X_recon.cpu().squeeze().numpy()
+# Generate new signals
+print("\nGenerating new signals...")
+model.eval()
+with torch.no_grad():
+    # Sample from standard normal distribution in latent space
+    num_samples = 3
+    z_new = torch.randn(num_samples, 2)  # 2 is the latent dimension
+    # Decode the samples
+    new_signals = model.decode(z_new)
+    
+    # Plot the generated signals
+    plt.figure(figsize=(15, 10))
+    for i in range(num_samples):
+        plt.subplot(num_samples, 1, i+1)
+        signal = new_signals[i].squeeze().numpy()
+        plt.plot(signal)
+        plt.title(f'Generated Signal {i+1}')
+        plt.xlabel('Sample Index')
+        plt.ylabel('Amplitude')
+    plt.tight_layout()
+    plt.savefig("generated-signals.svg")
+    plt.show()
+    print("Generated signals plot saved as 'generated-signals.svg'")
 
-# plt.figure(figsize=(10, 4))
-# plt.plot(X_orig, label='Original')
-# plt.plot(X_recon, label='Reconstructed')
-# plt.legend()
-# plt.title(f"ECG Signal Reconstruction (Sample {idx})")
-# plt.xlabel("Sample Index")
-# plt.ylabel("Amplitude")
-# plt.savefig("reconstruction-vae-two.svg")
-# plt.show()

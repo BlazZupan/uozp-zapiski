@@ -1,0 +1,36 @@
+digraph lattice {
+  rankdir=TB;
+  node [shape=circle, style=filled, fillcolor=lightgray];
+  subgraph level0 {
+    rank = same;
+    "∅" [label="∅\n100"];
+  }
+  subgraph level1 {
+    rank = same;
+    "A" [label="A\n150"];
+    "B" [label="B\n140"];
+    "C" [label="C\n160"];
+  }
+  subgraph level2 {
+    rank = same;
+    "AB" [label="AB\n180"];
+    "AC" [label="AC\n190"];
+    "BC" [label="BC\n200"];
+  }
+  subgraph level3 {
+    rank = same;
+    "ABC" [label="ABC\n250"];
+  }
+  "∅" -> "A" [label="+50"];
+  "∅" -> "B" [label="+40"];
+  "∅" -> "C" [label="+60"];
+  "A" -> "AB" [label="+30"];
+  "A" -> "AC" [label="+40"];
+  "B" -> "AB" [label="+40"];
+  "B" -> "BC" [label="+60"];
+  "C" -> "AC" [label="+30"];
+  "C" -> "BC" [label="+40"];
+  "AB" -> "ABC" [label="+70"];
+  "AC" -> "ABC" [label="+60"];
+  "BC" -> "ABC" [label="+50"];
+}
